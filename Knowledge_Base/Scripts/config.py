@@ -8,5 +8,7 @@ PDF_PATH = (
     / "AZURE_DATA_ENGINEERING_BROCHURE.pdf"
 )
 
-print("PDF_PATH:", PDF_PATH)
-print("Exists:", PDF_PATH.exists())
+EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
+VECTOR_DB_PATH = KNOWLEDGE_BASE / "Vector_DB"
+
+COLLECTION_NAME = "vector_db_mcp"

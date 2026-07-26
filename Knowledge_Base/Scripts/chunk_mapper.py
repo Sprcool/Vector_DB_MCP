@@ -1,6 +1,6 @@
 import hashlib
 
-from models import KnowledgeRecord
+from .models import KnowledgeRecord
 
 
 def get_text(chunk):
