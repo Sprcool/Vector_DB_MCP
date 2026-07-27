@@ -1,9 +1,9 @@
 <div align="center">
 
-# 🧠🔍 Vector_DB_MCP
+# 🧠🔍 Building a Retrieval-Augmented Generation (RAG) Pipeline
 
-### Retrieval-Augmented Generation, ground up.
-**From 📄 PDF to 🤖 grounded answer — a RAG pipeline exposed as an MCP tool.**
+
+### From PDF Ingestion to MCP-Powered Semantic Search
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Docling](https://img.shields.io/badge/Parsing-Docling-6E56CF)](https://github.com/DS4SD/docling)
