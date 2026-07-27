@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Getting Started — Vector_DB_MCP RAG Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="getting-started.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content">
+
+      <section class="hero" id="top" style="padding-bottom:8px;">
+        <div class="eyebrow">Setup</div>
+        <h1 style="font-size:34px;">Getting started</h1>
+        <p class="lede">From a clean clone to a working MCP-connected knowledge base.</p>
+      </section>
+
+      <section id="prereqs" style="border-top:1px solid var(--line); margin-top:8px;">
+        <div class="sec-head"><span class="tag">BEFORE YOU START</span><h2>Prerequisites</h2></div>
+        <div class="card-grid">
+          <div class="card"><h4><span class="icon">Py</span>Python 3.10+</h4><p>Required by Docling and sentence-transformers.</p></div>
+          <div class="card"><h4><span class="icon">Pdf</span>A source PDF</h4><p>Placed at <code>Knowledge_Base/PDF_Source/</code>, matching the filename in <code>config.py</code>.</p></div>
+          <div class="card"><h4><span class="icon">Mc</span>An MCP client</h4><p>Any MCP-aware client (e.g. Claude Desktop, Claude Code) to actually call the tool once the server is running.</p></div>
+          <div class="card"><h4><span class="icon">Gb</span>~1–2GB disk</h4><p>For the embedding model weights and the local ChromaDB store.</p></div>
+        </div>
+      </section>
+
+      <section id="steps">
+        <div class="sec-head"><span class="tag">SETUP</span><h2>Installation &amp; first run</h2></div>
+        <ol class="steps">
+          <li>
+            <h4>Clone the repository</h4>
+            <p></p>
+            <pre>git clone https://github.com/Sprcool/Vector_DB_MCP.git
+cd Vector_DB_MCP</pre>
+          </li>
+          <li>
+            <h4>Create a virtual environment</h4>
+            <pre>python -m venv .venv
+source .venv/bin/activate   <span class="cm"># .venv\Scripts\activate on Windows</span></pre>
+          </li>
+          <li>
+            <h4>Install dependencies</h4>
+            <pre>pip install docling sentence-transformers chromadb "mcp[cli]"</pre>
+          </li>
+          <li>
+            <h4>Configure paths</h4>
+            <p>Open <code>Knowledge_Base/Scripts/config.py</code> and confirm <code>PDF_PATH</code> points at your source document, and that <code>PDF_Source/</code> actually contains it.</p>
+          </li>
+          <li>
+            <h4>Run ingestion</h4>
+            <p>Parses, chunks, deduplicates, embeds, and stores the document. This populates <code>Knowledge_Base/Vector_DB/</code>.</p>
+            <pre>python -m Scripts.ingest</pre>
+          </li>
+          <li>
+            <h4>Start the MCP server</h4>
+            <pre>python mcp_server.py</pre>
+          </li>
+          <li>
+            <h4>Connect an MCP client</h4>
+            <p>Point your MCP client's config at <code>mcp_server.py</code> so it can discover the <code>search_knowledge_base</code> tool. See the <a href="api.html">API reference</a> for the tool's exact signature.</p>
+          </li>
+          <li>
+            <h4>Test search</h4>
+            <p>From the client, call <code>search_knowledge_base</code> with a question about your source document and confirm you get ranked results with headings and page numbers back.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="samples">
+        <div class="sec-head retrieve"><span class="tag">TRY IT</span><h2>Sample queries</h2></div>
+        <p class="sec-sub">Example questions to sanity-check retrieval quality once the server is running (phrased for the sample Azure Data Engineering brochure — adapt to your own source document).</p>
+        <div class="card-grid">
+          <div class="card"><h4>“What is Azure Data Factory?”</h4><p>A direct definitional question — should return the passage that introduces the service.</p></div>
+          <div class="card"><h4>“How does the platform handle data pipelines?”</h4><p>Tests semantic matching against a paraphrase, not an exact keyword match.</p></div>
+          <div class="card"><h4>“What are the key benefits mentioned?”</h4><p>Broader question — good for checking that <code>top_k</code> surfaces a diverse set of relevant passages.</p></div>
+          <div class="card"><h4>“Which page discusses security and compliance?”</h4><p>Checks that page/heading metadata on <code>SearchResult</code> is accurate and useful for citation.</p></div>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="content">
+      <div id="page-nav" class="page-nav"></div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="architecture.html">Architecture docs</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>

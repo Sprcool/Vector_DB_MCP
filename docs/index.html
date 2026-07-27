@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vector_DB_MCP — Retrieval-Augmented Generation (RAG) Architecture</title>
+<meta name="description" content="Designing a production-ready knowledge retrieval pipeline: PDF ingestion, semantic chunking, vector search, and MCP-powered retrieval.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="index.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content wide">
+
+      <section class="hero" id="top">
+        <div class="eyebrow">Engineering Documentation</div>
+        <h1>Retrieval-Augmented Generation (RAG) Architecture<span class="sub">Designing a Production-Ready Knowledge Retrieval Pipeline</span></h1>
+        <p class="lede">From PDF ingestion and semantic chunking to vector search, context retrieval, and MCP-powered knowledge access — this is the full path a document takes to become a grounded answer.</p>
+
+        <div class="flowline">
+          <span class="step ingest">01 Ingestion</span><span class="arrow">→</span>
+          <span class="step ingest">02 Parsing</span><span class="arrow">→</span>
+          <span class="step ingest">03 Chunking</span><span class="arrow">→</span>
+          <span class="step ingest">04 Mapping</span><span class="arrow">→</span>
+          <span class="step ingest">05 Dedup</span><span class="arrow">→</span>
+          <span class="step ingest">06 Embedding</span><span class="arrow">→</span>
+          <span class="step ingest">07 Indexing</span><span class="arrow">→</span>
+          <span class="step retrieve">08 Retrieval</span><span class="arrow">→</span>
+          <span class="step retrieve">09 MCP</span>
+        </div>
+
+        <div class="chips">
+          <span class="chip hi">RAG</span>
+          <span class="chip">Python</span>
+          <span class="chip">Docling</span>
+          <span class="chip">Sentence Transformers</span>
+          <span class="chip">BGE</span>
+          <span class="chip">ChromaDB</span>
+          <span class="chip">FastMCP</span>
+          <span class="chip">MIT License</span>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="num">9</div><div class="lbl">pipeline stages</div></div>
+          <div class="stat"><div class="num">11</div><div class="lbl">modules documented</div></div>
+          <div class="stat"><div class="num">768d</div><div class="lbl">embedding dimensionality</div></div>
+          <div class="stat"><div class="num">1</div><div class="lbl">MCP tool exposed</div></div>
+        </div>
+      </section>
+
+      <!-- ================= WHY RAG ================= -->
+      <section id="why-rag">
+        <div class="sec-head">
+          <span class="tag">CONTEXT</span>
+          <h2>Why RAG?</h2>
+        </div>
+        <p class="sec-sub">Language models are fluent, not omniscient. Retrieval-augmented generation closes the gap between what a model was trained on and what it actually needs to know to answer correctly.</p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h4><span class="icon">!</span>Why LLMs hallucinate</h4>
+            <p>A model's knowledge is frozen at training time and compressed into weights — it has no way to look anything up. When a question falls outside what it memorized (a private document, a recent change, a specific brochure), it still produces a fluent answer, just not necessarily a true one.</p>
+          </div>
+          <div class="card">
+            <h4><span class="icon">⌕</span>Why retrieval is needed</h4>
+            <p>Retrieval gives the model an open book instead of asking it to answer from memory. Relevant passages are fetched at query time and placed directly in front of the model, so the answer is grounded in something real and checkable rather than reconstructed from training statistics.</p>
+          </div>
+          <div class="card">
+            <h4><span class="icon">✓</span>How this project solves it</h4>
+            <p>Vector_DB_MCP turns a source PDF into searchable, semantically-chunked passages in ChromaDB. At query time, the closest passages are retrieved by meaning (not keyword) and served through an MCP tool, so any MCP-aware client can ground its answers in the source document.</p>
+          </div>
+          <div class="card">
+            <h4><span class="icon">≈</span>Benefits of semantic search</h4>
+            <p>Embedding-based search matches on meaning, not exact wording — a question phrased differently from the source text still finds the right passage. Combined with heading and page metadata, results stay traceable back to exactly where they came from.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= HIGH-LEVEL FLOW ================= -->
+      <section id="flow">
+        <div class="sec-head">
+          <span class="tag">FLOW</span>
+          <h2>High-level RAG flow</h2>
+        </div>
+        <p class="sec-sub">The same shape as every RAG system, specialized for this project's tools. See <a href="architecture.html">End-to-End RAG Architecture</a> for the fully detailed diagram.</p>
+
+        <div class="diagram-frame narrow">
+          <svg viewBox="0 0 360 620" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="fa" markerWidth="8" markerHeight="8" refX="4" refY="6" orient="auto">
+                <path d="M0,0 L8,0 L4,7 Z" fill="var(--accent)"/>
+              </marker>
+              <marker id="fa2" markerWidth="8" markerHeight="8" refX="4" refY="6" orient="auto">
+                <path d="M0,0 L8,0 L4,7 Z" fill="var(--accent2)"/>
+              </marker>
+            </defs>
+            <!-- nodes -->
+            <g font-family="IBM Plex Mono" font-size="12">
+              <rect x="60" y="10" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent)"/>
+              <text x="180" y="38" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Document</text>
+
+              <line x1="180" y1="56" x2="180" y2="82" stroke="var(--accent)" marker-end="url(#fa)"/>
+              <rect x="60" y="84" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent)"/>
+              <text x="180" y="112" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Parse</text>
+
+              <line x1="180" y1="130" x2="180" y2="156" stroke="var(--accent)" marker-end="url(#fa)"/>
+              <rect x="60" y="158" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent)"/>
+              <text x="180" y="186" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Chunk</text>
+
+              <line x1="180" y1="204" x2="180" y2="230" stroke="var(--accent)" marker-end="url(#fa)"/>
+              <rect x="60" y="232" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent)"/>
+              <text x="180" y="260" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Embed</text>
+
+              <line x1="180" y1="278" x2="180" y2="304" stroke="var(--accent)" marker-end="url(#fa)"/>
+              <rect x="30" y="306" width="300" height="52" rx="5" fill="var(--hub)" stroke="var(--hub)"/>
+              <text x="180" y="337" text-anchor="middle" fill="var(--hub-text)" font-family="Space Grotesk" font-weight="600" font-size="14">Store (ChromaDB)</text>
+
+              <line x1="330" y1="332" x2="330" y2="410" stroke="var(--line)"/>
+              <line x1="330" y1="410" x2="300" y2="410" stroke="var(--accent2)" marker-end="url(#fa2)"/>
+              <rect x="60" y="384" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="180" y="412" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">User Query</text>
+
+              <line x1="180" y1="430" x2="180" y2="456" stroke="var(--accent2)" marker-end="url(#fa2)"/>
+              <rect x="60" y="458" width="240" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="180" y="486" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Retrieve</text>
+
+              <line x1="180" y1="504" x2="180" y2="530" stroke="var(--accent2)" marker-end="url(#fa2)"/>
+              <rect x="60" y="532" width="240" height="46" rx="5" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+              <text x="180" y="560" text-anchor="middle" fill="var(--ink)" font-family="Space Grotesk" font-weight="600" font-size="14">Context</text>
+
+              <line x1="180" y1="578" x2="180" y2="604" stroke="var(--accent2)" marker-end="url(#fa2)"/>
+            </g>
+            <text x="180" y="616" text-anchor="middle" fill="var(--ink-soft)" font-family="IBM Plex Mono" font-size="11">→ LLM → Answer</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ================= TECH STACK SUMMARY ================= -->
+      <section id="stack">
+        <div class="sec-head">
+          <span class="tag">STACK</span>
+          <h2>Technology stack</h2>
+        </div>
+        <p class="sec-sub">A short summary — the full write-up with rationale for each choice lives on the <a href="architecture.html#stack">architecture page</a>.</p>
+        <div class="card-grid">
+          <div class="card"><h4><span class="icon">Py</span>Python</h4><p>Glue language for the whole pipeline — every stage is a small, typed, composable module.</p></div>
+          <div class="card"><h4><span class="icon">Dc</span>Docling</h4><p>Parses PDFs into a structured document and hierarchically chunks it along real section boundaries.</p></div>
+          <div class="card"><h4><span class="icon">ST</span>Sentence Transformers</h4><p>Runs <code>BAAI/bge-base-en-v1.5</code> locally to turn text into 768-dimensional embeddings.</p></div>
+          <div class="card"><h4><span class="icon">Cr</span>ChromaDB</h4><p>Persistent local vector store — one collection, upsert on ingest, cosine query on retrieval.</p></div>
+          <div class="card"><h4><span class="icon">Mc</span>FastMCP</h4><p>Exposes retrieval as a single MCP tool so any MCP-aware client can query the knowledge base.</p></div>
+          <div class="card"><h4><span class="icon">#</span>SHA-256</h4><p>Derives a deterministic chunk id from source + page + heading + text, enabling idempotent upserts.</p></div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="architecture.html">Architecture docs</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>

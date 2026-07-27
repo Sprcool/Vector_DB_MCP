@@ -1,0 +1,26 @@
+/* ============================================================
+   Dark theme overrides — applied when <html data-theme="dark">
+   ============================================================ */
+html[data-theme="dark"]{
+  --paper:#0B0F1A;
+  --paper-raised:#121826;
+  --ink:#EDEFF4;
+  --ink-soft:#9AA4BD;
+  --line:#232B3D;
+  --line-soft:#1A2130;
+  --accent:#7C97FF;
+  --accent-soft:#1B2440;
+  --accent2:#3FD8AE;
+  --accent2-soft:#0F2A22;
+  --hub:#1B2440;
+  --hub-text:#F4F6FB;
+  --hub-text-soft:#AEB9D6;
+  --code-bg:#070A12;
+  --code-text:#D7DEEF;
+  --code-comment:#5C6A8C;
+}
+html[data-theme="dark"] .search-results{box-shadow:0 8px 24px rgba(0,0,0,.5);}
+html[data-theme="dark"] .theme-toggle .icon-sun{display:inline-flex;}
+html[data-theme="dark"] .theme-toggle .icon-moon{display:none;}
+html:not([data-theme="dark"]) .theme-toggle .icon-sun{display:none;}
+html:not([data-theme="dark"]) .theme-toggle .icon-moon{display:inline-flex;}

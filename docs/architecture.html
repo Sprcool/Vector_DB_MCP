@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>End-to-End RAG Architecture — Vector_DB_MCP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="architecture.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content wide">
+
+      <section class="hero" id="top" style="padding-bottom:8px;">
+        <div class="eyebrow">System design</div>
+        <h1 style="font-size:34px;">End-to-End RAG Architecture</h1>
+        <p class="lede">Two flows share one store, and the retrieval flow terminates in an MCP tool. The ingestion flow (top) runs offline to populate the collection; the retrieval flow (bottom) runs per-query and is exposed to any MCP client through a single FastMCP tool.</p>
+      </section>
+
+      <section id="architecture" style="border-top:none; padding-top:8px;">
+        <div class="diagram-frame">
+        <svg viewBox="0 0 1130 500" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow-i" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arrow-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent2)"/>
+            </marker>
+          </defs>
+
+          <!-- row labels -->
+          <text x="10" y="30" class="mono" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)" letter-spacing="1.5">INGESTION — offline batch (ingest.py)</text>
+          <text x="10" y="490" class="mono" font-family="IBM Plex Mono" font-size="11" fill="var(--accent2)" letter-spacing="1.5">RETRIEVAL — per query, then exposed to MCP clients (retrieval_service.py → mcp_server.py)</text>
+
+          <!-- ===== TOP ROW (ingestion) ===== -->
+          <!-- 1 PDF Source -->
+          <g>
+            <rect x="10" y="55" width="140" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+            <text x="22" y="75" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">01</text>
+            <text x="80" y="88" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">PDF Source</text>
+            <text x="80" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">PDF_Source/*.pdf</text>
+          </g>
+          <line x1="150" y1="91" x2="178" y2="91" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- 2 document_parser -->
+          <g>
+            <rect x="180" y="55" width="150" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+            <text x="192" y="75" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">02</text>
+            <text x="255" y="88" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">DocumentParser</text>
+            <text x="255" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">docling.DocumentConverter</text>
+          </g>
+          <line x1="330" y1="91" x2="358" y2="91" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- 3 chunker -->
+          <g>
+            <rect x="360" y="55" width="150" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+            <text x="372" y="75" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">03</text>
+            <text x="435" y="88" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">Chunker</text>
+            <text x="435" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">HierarchicalChunker</text>
+          </g>
+          <line x1="510" y1="91" x2="538" y2="91" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- 4 chunk_mapper -->
+          <g>
+            <rect x="540" y="55" width="150" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+            <text x="552" y="75" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">04</text>
+            <text x="615" y="88" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">ChunkMapper</text>
+            <text x="615" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">build_records() + sha256 id</text>
+          </g>
+          <line x1="720" y1="91" x2="748" y2="91" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- 5 deduplicator -->
+          <g>
+            <rect x="750" y="55" width="150" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+            <text x="762" y="75" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">05</text>
+            <text x="825" y="88" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">Deduplicator</text>
+            <text x="825" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">dedupe by record.id</text>
+          </g>
+
+          <!-- elbow: deduplicator down then right, into embed -->
+          <path d="M 825 127 L 825 150 L 900 150 L 900 163" fill="none" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- 6 Embed (placed row2 right side) -->
+          <g>
+            <rect x="820" y="165" width="160" height="72" rx="4" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="832" y="185" font-family="IBM Plex Mono" font-size="11" fill="var(--accent)">06</text>
+            <text x="900" y="198" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">EmbeddingService</text>
+            <text x="900" y="216" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">.embed() — bge-base-en-v1.5</text>
+          </g>
+
+          <!-- Embed down to hub -->
+          <path d="M 820 201 L 700 201 L 700 240" fill="none" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+
+          <!-- ===== HUB ===== -->
+          <g>
+            <rect x="440" y="240" width="260" height="90" rx="5" fill="var(--hub)" stroke="var(--hub)"/>
+            <text x="470" y="264" font-family="IBM Plex Mono" font-size="11" fill="var(--accent2)">07</text>
+            <text x="570" y="280" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="15" fill="var(--hub-text)">Vector Store</text>
+            <text x="570" y="300" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--hub-text-soft)">ChromaDB · PersistentClient</text>
+            <text x="570" y="316" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--hub-text-soft)">collection: vector_db_mcp</text>
+          </g>
+          <text x="705" y="255" font-family="IBM Plex Mono" font-size="10" fill="var(--accent)">upsert()</text>
+
+          <!-- hub down to retrieval search -->
+          <path d="M 500 330 L 500 365 L 555 365 L 555 400" fill="none" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+          <text x="410" y="358" font-family="IBM Plex Mono" font-size="10" fill="var(--accent2)">query()</text>
+
+          <!-- ===== BOTTOM ROW (retrieval), right to left flow visually but logical order left->right ===== -->
+          <!-- 8a Query -->
+          <g>
+            <rect x="10" y="400" width="130" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+            <text x="22" y="420" font-family="IBM Plex Mono" font-size="11" fill="var(--accent2)">08</text>
+            <text x="75" y="434" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">User Query</text>
+            <text x="75" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">natural language str</text>
+          </g>
+          <line x1="140" y1="436" x2="168" y2="436" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+
+          <!-- 8b RetrievalService -->
+          <g>
+            <rect x="170" y="400" width="160" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+            <text x="182" y="420" font-family="IBM Plex Mono" font-size="10.5" fill="var(--accent2)">retrieval_</text>
+            <text x="250" y="434" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">RetrievalService</text>
+            <text x="250" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">.search(question, top_k)</text>
+          </g>
+          <line x1="330" y1="436" x2="358" y2="436" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+
+          <!-- 8c embed_query -->
+          <g>
+            <rect x="360" y="400" width="170" height="72" rx="4" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+            <text x="372" y="420" font-family="IBM Plex Mono" font-size="10.5" fill="var(--accent2)">embed_</text>
+            <text x="445" y="434" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">EmbeddingService</text>
+            <text x="445" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">.embed_query() — normalized</text>
+          </g>
+          <line x1="530" y1="436" x2="553" y2="436" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+
+          <!-- 8d VectorStore.search -->
+          <g>
+            <rect x="555" y="400" width="160" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+            <text x="567" y="420" font-family="IBM Plex Mono" font-size="10.5" fill="var(--accent2)">store</text>
+            <text x="635" y="434" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">VectorStore</text>
+            <text x="635" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">.search() → collection.query()</text>
+          </g>
+          <line x1="715" y1="436" x2="743" y2="436" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+
+          <!-- 8e Results -->
+          <g>
+            <rect x="745" y="400" width="150" height="72" rx="4" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+            <text x="757" y="420" font-family="IBM Plex Mono" font-size="11" fill="var(--accent2)">→</text>
+            <text x="820" y="434" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">SearchResults</text>
+            <text x="820" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--ink-soft)">text, heading, page, distance</text>
+          </g>
+          <line x1="895" y1="436" x2="923" y2="436" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+
+          <!-- 9 MCP tool boundary -->
+          <g>
+            <rect x="925" y="395" width="185" height="82" rx="4" fill="var(--hub)" stroke="var(--hub)" stroke-dasharray="0"/>
+            <text x="939" y="416" font-family="IBM Plex Mono" font-size="11" fill="var(--accent2)">09</text>
+            <text x="1017" y="430" text-anchor="middle" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--hub-text)">MCP Tool</text>
+            <text x="1017" y="447" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--hub-text-soft)">search_knowledge_base()</text>
+            <text x="1017" y="462" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--hub-text-soft)">FastMCP · asdict(result)</text>
+          </g>
+          <path d="M 1017 395 L 1017 375" stroke="var(--accent2)" stroke-dasharray="3,3" marker-end="url(#arrow-r)"/>
+          <text x="930" y="368" font-family="IBM Plex Mono" font-size="10" fill="var(--ink-soft)">→ MCP client</text>
+
+        </svg>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>Ingestion path</span>
+          <span><i style="background:var(--accent2)"></i>Retrieval path</span>
+          <span><i style="background:var(--hub)"></i>Process boundary (ChromaDB store / MCP tool)</span>
+        </div>
+      </div>
+      </section>
+
+      <!-- ================= SEQUENCE DIAGRAM ================= -->
+      <section id="sequence">
+        <div class="sec-head retrieve">
+          <span class="tag">RUNTIME</span>
+          <h2>Query-time sequence</h2>
+        </div>
+        <p class="sec-sub">What actually happens, actor by actor, for a single question — from the moment an MCP client calls the tool to the moment an LLM has grounded context to answer with.</p>
+
+        <div class="diagram-frame narrow">
+          <svg viewBox="0 0 420 780" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="sa" markerWidth="8" markerHeight="8" refX="4" refY="6" orient="auto">
+                <path d="M0,0 L8,0 L4,7 Z" fill="var(--accent2)"/>
+              </marker>
+            </defs>
+            <g font-family="Space Grotesk" font-weight="600" font-size="13.5">
+              <rect x="40" y="20" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="49" text-anchor="middle" fill="var(--ink)">User</text>
+              <line x1="210" y1="66" x2="210" y2="104" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">asks a question</text>
+              <rect x="40" y="108" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="137" text-anchor="middle" fill="var(--ink)">MCP Server</text>
+              <line x1="210" y1="154" x2="210" y2="192" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="178" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">search_knowledge_base()</text>
+              <rect x="40" y="196" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="225" text-anchor="middle" fill="var(--ink)">RetrievalService</text>
+              <line x1="210" y1="242" x2="210" y2="280" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="266" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">.search()</text>
+              <rect x="40" y="284" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="313" text-anchor="middle" fill="var(--ink)">EmbeddingService</text>
+              <line x1="210" y1="330" x2="210" y2="368" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="354" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">.embed_query()</text>
+              <rect x="40" y="372" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="401" text-anchor="middle" fill="var(--ink)">VectorStore</text>
+              <line x1="210" y1="418" x2="210" y2="456" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="442" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">.search() → query()</text>
+              <rect x="40" y="460" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="489" text-anchor="middle" fill="var(--ink)">ChromaDB</text>
+              <line x1="210" y1="506" x2="210" y2="544" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="530" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">cosine similarity</text>
+              <rect x="40" y="548" width="340" height="46" rx="5" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+              <text x="210" y="577" text-anchor="middle" fill="var(--ink)">Results</text>
+              <line x1="210" y1="594" x2="210" y2="632" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="618" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">ranked SearchResults</text>
+              <rect x="40" y="636" width="340" height="46" rx="5" fill="var(--paper-raised)" stroke="var(--accent2)"/>
+              <text x="210" y="665" text-anchor="middle" fill="var(--ink)">LLM</text>
+              <line x1="210" y1="682" x2="210" y2="720" stroke="var(--accent2)" marker-end="url(#sa)"/>
+              <text x="210" y="706" text-anchor="middle" font-family="IBM Plex Mono" font-weight="400" font-size="10.5" fill="var(--ink-soft)">question + context</text>
+              <rect x="40" y="724" width="340" height="46" rx="5" fill="var(--hub)" stroke="var(--hub)"/>
+              <text x="210" y="753" text-anchor="middle" fill="var(--hub-text)">Answer</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ================= DATA MODEL ================= -->
+      <section id="model">
+        <div class="sec-head">
+          <span class="tag">SCHEMA</span>
+          <h2>Data model</h2>
+        </div>
+        <p class="sec-sub">Three dataclasses in <code>models.py</code> carry a chunk through the whole pipeline. Each stage narrows or extends the previous shape rather than inventing a new one.</p>
+        <div class="diagram-frame">
+        <svg viewBox="0 0 900 150" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow-i" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arrow-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent2)"/>
+            </marker>
+          </defs>
+          <rect x="10" y="20" width="250" height="110" rx="4" fill="var(--paper-raised)" stroke="var(--accent)"/>
+          <text x="26" y="42" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--accent)">KnowledgeRecord</text>
+          <text x="26" y="64" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">id · text · heading</text>
+          <text x="26" y="80" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">page · source</text>
+          <text x="26" y="104" font-family="IBM Plex Mono" font-size="10" fill="var(--ink-soft)">produced by chunk_mapper.py</text>
+
+          <line x1="260" y1="75" x2="315" y2="75" stroke="var(--accent)" marker-end="url(#arrow-i)"/>
+          <text x="265" y="68" font-family="IBM Plex Mono" font-size="9.5" fill="var(--accent)">+ embedding</text>
+
+          <rect x="320" y="20" width="270" height="110" rx="4" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="336" y="42" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">EmbeddedKnowledgeRecord</text>
+          <text x="336" y="64" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">record: KnowledgeRecord</text>
+          <text x="336" y="80" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">embedding: list[float]</text>
+          <text x="336" y="104" font-family="IBM Plex Mono" font-size="10" fill="var(--ink-soft)">produced by embeddings.py</text>
+
+          <line x1="590" y1="75" x2="645" y2="75" stroke="var(--accent2)" marker-end="url(#arrow-r)"/>
+          <text x="592" y="68" font-family="IBM Plex Mono" font-size="9.5" fill="var(--accent2)">re-shaped on query</text>
+
+          <rect x="650" y="20" width="240" height="110" rx="4" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+          <text x="666" y="42" font-family="Space Grotesk" font-weight="600" font-size="13" fill="var(--ink)">SearchResult</text>
+          <text x="666" y="64" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">id · text · heading</text>
+          <text x="666" y="80" font-family="IBM Plex Mono" font-size="11" fill="var(--ink-soft)">page · source · distance</text>
+          <text x="666" y="104" font-family="IBM Plex Mono" font-size="10" fill="var(--ink-soft)">produced by vector_store.py</text>
+        </svg>
+        </div>
+      </section>
+
+      <!-- ================= DESIGN PRINCIPLES ================= -->
+      <section id="principles">
+        <div class="sec-head">
+          <span class="tag">DESIGN</span>
+          <h2>Design principles</h2>
+        </div>
+        <p class="sec-sub">The choices that shape every module, not just the obvious ones.</p>
+        <div class="card-grid">
+          <div class="card"><h4><span class="icon">#</span>Deterministic IDs</h4><p>Chunk ids are a SHA-256 hash of source, page, heading, and text — the same input always produces the same id.</p></div>
+          <div class="card"><h4><span class="icon">↻</span>Idempotent ingestion</h4><p>Re-running ingestion on an unchanged PDF re-derives the same ids, so <code>upsert()</code> overwrites in place instead of duplicating.</p></div>
+          <div class="card"><h4><span class="icon">▦</span>Modular architecture</h4><p>Parsing, chunking, mapping, deduplication, embedding, storage, and retrieval are each a single-purpose module with one job.</p></div>
+          <div class="card"><h4><span class="icon">⊘</span>Separation of concerns</h4><p><code>VectorStore</code> is the only module that talks to ChromaDB; <code>EmbeddingService</code> is the only one that loads the model. Nothing else knows how they work internally.</p></div>
+          <div class="card"><h4><span class="icon">⇄</span>Stateless retrieval</h4><p><code>RetrievalService.search()</code> holds no state between calls — every query is embedded and searched fresh, so concurrent queries can't interfere with each other.</p></div>
+          <div class="card"><h4><span class="icon">◧</span>Metadata preservation</h4><p>Heading breadcrumbs and page numbers survive from the original PDF all the way to the final <code>SearchResult</code>, so answers stay traceable to their source.</p></div>
+          <div class="card"><h4><span class="icon">τ</span>Strong typing</h4><p>Every record that moves between stages is a typed <code>dataclass</code> — <code>KnowledgeRecord</code>, <code>EmbeddedKnowledgeRecord</code>, <code>SearchResult</code> — not a loose dict.</p></div>
+          <div class="card"><h4><span class="icon">+</span>Extensibility</h4><p>Swapping the embedding model, the vector database, or the document source means touching one module, not rewriting the pipeline.</p></div>
+        </div>
+      </section>
+
+      <!-- ================= TECH STACK ================= -->
+      <section id="stack">
+        <div class="sec-head">
+          <span class="tag">STACK</span>
+          <h2>Technology stack</h2>
+        </div>
+        <p class="sec-sub">What each dependency is responsible for, and why it's the one used here.</p>
+        <table>
+          <thead><tr><th>Technology</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td class="file">Python</td><td>Language for the whole pipeline — typed dataclasses and small composable modules end to end.</td></tr>
+            <tr><td class="file">Docling</td><td>Converts a PDF into a structured document and chunks it along real section/heading boundaries via <code>HierarchicalChunker</code>.</td></tr>
+            <tr><td class="file">Sentence Transformers</td><td>Runs the embedding model locally through a simple <code>.encode()</code> API, for both batch document embedding and single-query embedding.</td></tr>
+            <tr><td class="file">BAAI/bge-base-en-v1.5</td><td>The specific embedding model — a 768-dimension general-purpose English sentence embedding model, strong on retrieval tasks.</td></tr>
+            <tr><td class="file">ChromaDB</td><td>Persistent local vector database. One <code>PersistentClient</code>, one collection, upsert on ingest, cosine query on retrieval.</td></tr>
+            <tr><td class="file">FastMCP</td><td>Wraps <code>RetrievalService</code> as an MCP tool (<code>search_knowledge_base</code>) so any MCP-aware client can call it directly.</td></tr>
+            <tr><td class="file">SHA-256</td><td>Hashes <code>source|page|heading|text</code> into a deterministic chunk id, the basis for idempotent re-ingestion.</td></tr>
+            <tr><td class="file">Dataclasses</td><td>Typed, structured records (<code>KnowledgeRecord</code>, <code>EmbeddedKnowledgeRecord</code>, <code>SearchResult</code>) instead of untyped dicts moving through the pipeline.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= PERFORMANCE ================= -->
+      <section id="performance">
+        <div class="sec-head">
+          <span class="tag">SPEC</span>
+          <h2>Performance &amp; design characteristics</h2>
+        </div>
+        <p class="sec-sub">The concrete parameters that determine retrieval quality and ingestion behavior.</p>
+        <table>
+          <thead><tr><th>Characteristic</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td class="file">Embedding model</td><td>BAAI/bge-base-en-v1.5 (sentence-transformers)</td></tr>
+            <tr><td class="file">Vector dimensions</td><td>768</td></tr>
+            <tr><td class="file">Vector database</td><td>ChromaDB, persistent local client</td></tr>
+            <tr><td class="file">Similarity metric</td><td>Cosine distance, via <code>collection.query()</code></td></tr>
+            <tr><td class="file">Chunking strategy</td><td>Hierarchical — split along the document's own section/heading structure, not fixed token windows</td></tr>
+            <tr><td class="file">Deduplication strategy</td><td>Exact-match on a SHA-256 content hash (source + page + heading + text)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= PROJECT STRUCTURE ================= -->
+      <section id="structure">
+        <div class="sec-head">
+          <span class="tag">LAYOUT</span>
+          <h2>Project structure</h2>
+        </div>
+        <p class="sec-sub">The knowledge-base package plus this documentation site, as reviewed.</p>
+        <pre>Vector_DB_MCP/
+├── mcp_server.py            <span class="cm"># FastMCP entry point — exposes search_knowledge_base</span>
+├── Knowledge_Base/
+│   ├── PDF_Source/
+│   │   └── *.pdf            <span class="cm"># source documents</span>
+│   ├── Vector_DB/            <span class="cm"># ChromaDB persistent storage (generated)</span>
+│   └── Scripts/
+│       ├── config.py
+│       ├── models.py
+│       ├── document_parser.py
+│       ├── chunker.py
+│       ├── chunk_mapper.py
+│       ├── deduplicator.py
+│       ├── embeddings.py
+│       ├── vector_store.py
+│       ├── retrieval_service.py
+│       └── ingest.py
+└── docs/                     <span class="cm"># this documentation site</span>
+    ├── index.html
+    ├── architecture.html
+    ├── pipeline.html
+    ├── modules.html
+    ├── getting-started.html
+    ├── api.html
+    ├── roadmap.html
+    ├── css/
+    ├── js/
+    └── partials/</pre>
+      </section>
+
+    </div>
+
+    <div class="content wide">
+      <div id="page-nav" class="page-nav"></div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="index.html">Overview</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>

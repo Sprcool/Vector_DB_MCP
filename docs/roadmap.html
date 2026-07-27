@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Roadmap — Vector_DB_MCP RAG Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="roadmap.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content">
+
+      <section class="hero" id="top" style="padding-bottom:8px;">
+        <div class="eyebrow">What's next</div>
+        <h1 style="font-size:34px;">Future roadmap</h1>
+        <p class="lede">Directions that would extend the pipeline beyond a single-document, single-shot retrieval system.</p>
+      </section>
+
+      <section id="items" style="border-top:1px solid var(--line); margin-top:8px;">
+        <div class="road-grid">
+          <div class="road-card">
+            <div class="status">Retrieval quality</div>
+            <h4>Hybrid search</h4>
+            <p>Combine dense vector similarity with sparse keyword search (e.g. BM25) so exact terms and identifiers aren't lost to purely semantic matching.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Retrieval quality</div>
+            <h4>Cross-encoder re-ranking</h4>
+            <p>Re-score the top vector-search candidates with a cross-encoder before returning them, trading a little latency for meaningfully better ranking.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Query control</div>
+            <h4>Metadata filters</h4>
+            <p>Let callers scope <code>search_knowledge_base</code> by source, page range, or heading, instead of always searching the entire collection.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Ingestion</div>
+            <h4>Incremental ingestion</h4>
+            <p>Detect changed or added pages in a source PDF and re-ingest only those, instead of reprocessing the whole document every run.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Serving</div>
+            <h4>Streaming responses</h4>
+            <p>Stream retrieved context and generated answers incrementally through the MCP tool rather than waiting for the full result set.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Architecture</div>
+            <h4>Agentic RAG</h4>
+            <p>Let the calling agent decide when to retrieve, reformulate the query, and retrieve again — rather than a single fixed retrieval step per question.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Scale</div>
+            <h4>Multi-document collections</h4>
+            <p>Extend beyond one hardcoded <code>PDF_PATH</code> to an ingestible library of documents, each still traceable through <code>source</code> metadata.</p>
+          </div>
+          <div class="road-card">
+            <div class="status">Scale</div>
+            <h4>Multimodal RAG</h4>
+            <p>Extend chunking and embedding to cover tables, figures, and images extracted from source documents, not just prose text.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="content">
+      <div id="page-nav" class="page-nav"></div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="architecture.html">Architecture docs</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>

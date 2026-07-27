@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Reference — Vector_DB_MCP RAG Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="api.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content">
+
+      <section class="hero" id="top" style="padding-bottom:8px;">
+        <div class="eyebrow">Reference</div>
+        <h1 style="font-size:34px;">API reference</h1>
+        <p class="lede">The MCP-facing surface of Vector_DB_MCP — one server, one tool.</p>
+      </section>
+
+      <section id="search-tool" style="border-top:1px solid var(--line); margin-top:8px;">
+        <div class="sec-head retrieve"><span class="tag">MCP TOOL</span><h2>search_knowledge_base</h2></div>
+        <p class="sec-sub">Registered on a <code>FastMCP("Knowledge Base")</code> server in <code>mcp_server.py</code>. Semantically searches the ingested document and returns ranked passages.</p>
+        <pre>@mcp.tool()
+def search_knowledge_base(question: str, top_k: int = 5):
+    results = retrieval_service.search(question, top_k)
+    return [asdict(result) for result in results]</pre>
+      </section>
+
+      <section id="params">
+        <div class="sec-head"><span class="tag">INPUT</span><h2>Request parameters</h2></div>
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="file">question</td><td>string</td><td>required</td><td>A natural-language question. Embedded with the same model used for ingestion, then compared against the stored vectors.</td></tr>
+            <tr><td class="file">top_k</td><td>integer</td><td>5</td><td>How many ranked results to return.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="response">
+        <div class="sec-head"><span class="tag">OUTPUT</span><h2>Response schema</h2></div>
+        <p class="sec-sub">A list of plain dicts — one per result, ordered by ascending distance (closer = more relevant).</p>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="file">id</td><td>string</td><td>SHA-256 content hash of the source chunk.</td></tr>
+            <tr><td class="file">text</td><td>string</td><td>The retrieved passage text.</td></tr>
+            <tr><td class="file">heading</td><td>string</td><td>Breadcrumb of section headings the passage falls under, e.g. <code>"Overview &gt; Key Services"</code>.</td></tr>
+            <tr><td class="file">page</td><td>integer</td><td>Page number in the source PDF (falls back to 0 if unavailable).</td></tr>
+            <tr><td class="file">source</td><td>string</td><td>Source filename.</td></tr>
+            <tr><td class="file">distance</td><td>float</td><td>Cosine distance from the query vector — lower is a closer match.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 style="font-size:15px; margin:28px 0 10px;">Example</h3>
+        <pre>&gt;&gt;&gt; search_knowledge_base("What is Azure Data Factory?", top_k=2)
+
+[
+  {
+    "id": "3f9a1c…",
+    "text": "Azure Data Factory is a cloud-based data integration service…",
+    "heading": "Overview &gt; Key Services &gt; Azure Data Factory",
+    "page": 4,
+    "source": "AZURE_DATA_ENGINEERING_BROCHURE.pdf",
+    "distance": 0.184
+  },
+  {
+    "id": "9b21e0…",
+    "text": "Pipelines in Azure Data Factory orchestrate data movement…",
+    "heading": "Overview &gt; Key Services &gt; Azure Data Factory",
+    "page": 5,
+    "source": "AZURE_DATA_ENGINEERING_BROCHURE.pdf",
+    "distance": 0.221
+  }
+]</pre>
+
+        <h3 style="font-size:15px; margin:28px 0 10px;">Notes</h3>
+        <div class="card-grid">
+          <div class="card"><h4>Empty collection</h4><p>If ingestion hasn't been run yet, the collection exists but is empty — the tool returns an empty list rather than erroring.</p></div>
+          <div class="card"><h4>No re-ranking</h4><p>Results are raw vector-similarity order. There's no cross-encoder re-ranking step yet — see the <a href="roadmap.html">roadmap</a>.</p></div>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="content">
+      <div id="page-nav" class="page-nav"></div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="architecture.html">Architecture docs</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pipeline Stages — Vector_DB_MCP RAG Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dark-theme.css">
+</head>
+<body data-page="pipeline.html">
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="brand"><span class="dot"></span>Vector_DB_MCP <small>RAG docs</small></div>
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search docs… ( / )" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+  <a class="gh-link" href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">GitHub ↗</a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="grp">
+      <ul>
+        <li><a href="index.html"><span class="n">◆</span>Overview</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">System</div>
+      <ul>
+        <li><a href="architecture.html"><span class="n">◆</span>Architecture</a></li>
+        <li><a href="modules.html"><span class="n">◆</span>Module reference</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">RAG pipeline</div>
+      <ul>
+        <li><a href="pipeline.html"><span class="n">◆</span>Pipeline overview</a></li>
+        <li class="sub"><a href="pipeline.html#s01"><span class="n">01</span>Document Ingestion</a></li>
+        <li class="sub"><a href="pipeline.html#s02"><span class="n">02</span>Document Parsing</a></li>
+        <li class="sub"><a href="pipeline.html#s03"><span class="n">03</span>Semantic Chunking</a></li>
+        <li class="sub"><a href="pipeline.html#s04"><span class="n">04</span>Metadata Mapping</a></li>
+        <li class="sub"><a href="pipeline.html#s05"><span class="n">05</span>Deduplication</a></li>
+        <li class="sub"><a href="pipeline.html#s06"><span class="n">06</span>Embedding Generation</a></li>
+        <li class="sub"><a href="pipeline.html#s07"><span class="n">07</span>Vector Indexing</a></li>
+        <li class="sub"><a href="pipeline.html#s08"><span class="n">08</span>Semantic Retrieval</a></li>
+        <li class="sub"><a href="pipeline.html#s09"><span class="n">09</span>MCP Integration</a></li>
+      </ul>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label">Using it</div>
+      <ul>
+        <li><a href="getting-started.html"><span class="n">◆</span>Getting started</a></li>
+        <li><a href="api.html"><span class="n">◆</span>API reference</a></li>
+        <li><a href="roadmap.html"><span class="n">◆</span>Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content">
+
+      <section class="hero" id="top" style="padding-bottom:8px;">
+        <div class="eyebrow">Pipeline</div>
+        <h1 style="font-size:34px;">The nine RAG pipeline stages</h1>
+        <p class="lede">Every stage narrows or transforms one shape into the next — a PDF becomes a document, a document becomes chunks, chunks become records, records become vectors, vectors become a searchable index, and a question becomes a grounded answer.</p>
+      </section>
+
+      <div class="stage-grid" style="border-top:1px solid var(--line); margin-top:8px;">
+
+        <section id="s01" class="stage-card">
+          <div class="badge">01</div>
+          <div>
+            <h3>Document Ingestion <span class="file">config.py</span></h3>
+            <p>The entry point for the whole batch process. <code>KNOWLEDGE_BASE</code> resolves two directories up from <code>config.py</code>, anchoring the pipeline to a project root that holds <code>PDF_Source/</code> and <code>Vector_DB/</code> as siblings — everything downstream reads from these fixed paths.</p>
+            <pre>PDF_PATH        = KNOWLEDGE_BASE / "PDF_Source" / "AZURE_DATA_ENGINEERING_BROCHURE.pdf"
+EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
+VECTOR_DB_PATH  = KNOWLEDGE_BASE / "Vector_DB"
+COLLECTION_NAME = "vector_db_mcp"</pre>
+          </div>
+        </section>
+
+        <section id="s02" class="stage-card">
+          <div class="badge">02</div>
+          <div>
+            <h3>Document Parsing <span class="file">document_parser.py</span></h3>
+            <p>Wraps Docling's <code>DocumentConverter</code>. Validates the PDF exists before conversion and returns Docling's structured <code>DoclingDocument</code> — headings, page provenance, and layout are preserved for later stages to read back out.</p>
+            <pre>def load_document(pdf_path: Path):
+    <span class="cm"># raises FileNotFoundError early if the PDF is missing</span>
+    converter = DocumentConverter()
+    result = converter.convert(pdf_path)
+    return result.document</pre>
+          </div>
+        </section>
+
+        <section id="s03" class="stage-card">
+          <div class="badge">03</div>
+          <div>
+            <h3>Semantic Chunking <span class="file">chunker.py</span></h3>
+            <p>Delegates to Docling's <code>HierarchicalChunker</code>, which splits the parsed document along its structural boundaries (sections/headings) rather than fixed token windows — chunks stay semantically coherent, which is what makes the retrieved context useful later.</p>
+            <pre>chunker = HierarchicalChunker()
+chunks  = list(chunker.chunk(document))</pre>
+          </div>
+        </section>
+
+        <section id="s04" class="stage-card">
+          <div class="badge">04</div>
+          <div>
+            <h3>Metadata Mapping <span class="file">chunk_mapper.py</span></h3>
+            <p>Flattens each Docling chunk into a plain <code>KnowledgeRecord</code>: text, joined heading breadcrumb (<code>"A &gt; B &gt; C"</code>), first page number from provenance, and source filename. The record's <code>id</code> is a SHA-256 hash of <code>source|page|heading|text</code> — deterministic, so re-ingesting the same PDF regenerates identical ids.</p>
+            <pre>value = f"{source}|{page}|{heading}|{text}"
+id    = hashlib.sha256(value.encode("utf-8")).hexdigest()</pre>
+          </div>
+        </section>
+
+        <section id="s05" class="stage-card">
+          <div class="badge">05</div>
+          <div>
+            <h3>Deduplication <span class="file">deduplicator.py</span></h3>
+            <p>Collapses records into a dict keyed on <code>record.id</code>, so any two chunks that hash identically are merged into one. Because the id is content-derived, this doubles as idempotency for re-runs, not just noise removal.</p>
+            <pre>unique_records = {r.id: r for r in records}
+print(f"Removed {before - after} duplicate chunks")</pre>
+          </div>
+        </section>
+
+        <section id="s06" class="stage-card">
+          <div class="badge">06</div>
+          <div>
+            <h3>Embedding Generation <span class="file">embeddings.py</span></h3>
+            <p><code>EmbeddingService</code> loads <code>BAAI/bge-base-en-v1.5</code> once and exposes two paths: batch <code>.embed()</code> for ingestion, and single-string <code>.embed_query()</code> for retrieval. Each ingested record is paired with its 768-dimension vector into an <code>EmbeddedKnowledgeRecord</code>.</p>
+            <pre>vectors = self.model.encode(texts)                      <span class="cm"># document side</span>
+embedding = self.model.encode(query, normalize_embeddings=True)  <span class="cm"># query side</span></pre>
+          </div>
+        </section>
+
+        <section id="s07" class="stage-card">
+          <div class="badge">07</div>
+          <div>
+            <h3>Vector Indexing <span class="file">vector_store.py</span></h3>
+            <p><code>VectorStore</code> owns the only connection to ChromaDB — a <code>PersistentClient</code> rooted at <code>config.VECTOR_DB_PATH</code>. <code>.store()</code> upserts ids, documents, metadata (heading/page/source), and embeddings in one call; <code>.reset()</code> drops and recreates the collection.</p>
+            <pre>self.collection.upsert(
+    ids=ids, documents=documents,
+    metadatas=metadatas, embeddings=embeddings
+)</pre>
+          </div>
+        </section>
+
+        <section id="s08" class="stage-card retrieve">
+          <div class="badge">08</div>
+          <div>
+            <h3>Semantic Retrieval <span class="file">retrieval_service.py</span></h3>
+            <p>The entry point external callers use for search. It composes <code>EmbeddingService.embed_query()</code> and <code>VectorStore.search()</code>, returning ranked <code>SearchResult</code> objects with cosine <code>distance</code> alongside the original heading/page/source metadata.</p>
+            <pre>query_embedding = self.embedding_service.embed_query(question)
+results = self.vector_store.search(query_embedding, top_k)
+return results</pre>
+          </div>
+        </section>
+
+        <section id="s09" class="stage-card retrieve">
+          <div class="badge">09</div>
+          <div>
+            <h3>MCP Integration <span class="file">mcp_server.py</span></h3>
+            <p>Wires the pipeline into an MCP server. A single <code>FastMCP</code> instance named <span class="mono">"Knowledge Base"</span> builds one shared <code>EmbeddingService</code> / <code>VectorStore</code> / <code>RetrievalService</code> at import time, then exposes <code>search_knowledge_base(question, top_k)</code> as the only tool — results are converted from <code>SearchResult</code> dataclasses to plain dicts with <code>asdict()</code> before crossing the MCP boundary to any connected client.</p>
+            <pre>@mcp.tool()
+def search_knowledge_base(question: str, top_k: int = 5):
+    results = retrieval_service.search(question, top_k)
+    return [asdict(result) for result in results]</pre>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="page-nav" class="page-nav"></div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="fl">
+        <span><b>Vector_DB_MCP</b> · v1.0</span>
+        <a href="architecture.html">Architecture docs</a>
+        <a href="https://github.com/Sprcool/Vector_DB_MCP" target="_blank" rel="noopener">Source</a>
+        <span>MIT License</span>
+      </div>
+      <span>Documentation generated for the Knowledge Base RAG pipeline</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/darkmode.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/search.js"></script>
+</body>
+</html>
